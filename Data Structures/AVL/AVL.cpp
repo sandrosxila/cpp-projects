@@ -13,6 +13,9 @@ private:
         int height = 0;
     } *ROOT = nullptr;
 
+//declare variable in order to calculate size of the AVL tree
+    int sz = 0;
+
 //define function to balance AVL tree
     void balance(node *&current, node *&root, node *&parent) {
 //    calculate height of left and right child to determine direction
@@ -154,12 +157,16 @@ private:
             current = new node();
             current->key = value;
             current->height = 1;
+//        increase size of the AVL tree
+            sz++;
             return;
         }
 //    redirect to the left child
         if (value < current->key) insert(current->left, value, root, current);
 //    redirect to the right child
-        else insert(current->right, value, root, current);
+        else if (value > current->key) insert(current->right, value, root, current);
+//    do not insert duplicate
+        else return;
 //    calculate height for the current node
         int leftHeight = current->left == nullptr ? 0 : current->left->height;
         int rightHeight = current->right == nullptr ? 0 : current->right->height;
@@ -301,26 +308,55 @@ private:
             }
 //        update heights of the predecessors
             update(root, P, root);
+//        decrease size of the AVL tree
+            sz--;
         }
+    }
+//define function to print out the elements
+    void preOrder(node *&current) {
+        if (current == nullptr) return;
+        cout << current->key << ' ';
+        preOrder(current->left);
+        preOrder(current->right);
+    }
+//define function to print out the sorted elements
+    void inOrder(node *&current) {
+        if (current == nullptr) return;
+        inOrder(current->left);
+        cout << current->key << ' ';
+        inOrder(current->right);
     }
 
 public:
+//    define public function for insertion
     void insert(T value) {
         insert(ROOT, value, ROOT);
     }
-
+//    define public function to erase the element
     void erase(T value) {
         erase(ROOT, value);
     }
-
+//    define the function to get the root element of the AVL tree
     T top() {
         if (ROOT == nullptr) return 0;
         return ROOT->key;
     }
+//    define the function to print out the elements of the AVL tree
+    void print(bool sorted = false) {
+        if (sorted) inOrder(ROOT);
+        else preOrder(ROOT);
+        cout << endl;
+    }
+//    define the function to get size of the AVL tree
+    int size() {
+        return sz;
+    }
 };
 
 int main() {
+//    create instance of AVL class
     AVL<int> x;
+//    insert numbers in the AVL tree
     x.insert(9);
     x.insert(5);
     x.insert(10);
@@ -330,10 +366,29 @@ int main() {
     x.insert(-1);
     x.insert(1);
     x.insert(2);
+//    duplicate values won't be inserted
+    x.insert(11);
+    x.insert(6);
+//    print size of the AVL tree
+    cout << "Size of the AVL tree is: " << x.size() << endl;
+//    print AVL tree sorted elements
+    cout << "Sorted elements of the AVL tree: ";
+    x.print(true);
+//    erase elements in AVL tree
     x.erase(10);
     x.erase(5);
     x.erase(2);
+//    print AVL tree
+    cout << "AVL tree elements, that are not sorted: ";
+    x.print();
+//    erase some element
     x.erase(6);
     x.erase(9);
-    cout << x.top() << endl;
+//    elements that does not exist in the AVL tree won't be erased
+    x.erase(9999);
+    x.erase(1234567);
+//    print the root of the AVL tree
+    cout << "The root element of the AVL tree: " << x.top() << endl;
+//    print size of the AVL tree
+    cout << "Size of the AVL tree is: " << x.size() << endl;
 }
