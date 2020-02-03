@@ -312,6 +312,7 @@ private:
             sz--;
         }
     }
+
 //define function to print out the elements
     void preOrder(node *&current) {
         if (current == nullptr) return;
@@ -319,6 +320,7 @@ private:
         preOrder(current->left);
         preOrder(current->right);
     }
+
 //define function to print out the sorted elements
     void inOrder(node *&current) {
         if (current == nullptr) return;
@@ -332,21 +334,25 @@ public:
     void insert(T value) {
         insert(ROOT, value, ROOT);
     }
+
 //    define public function to erase the element
     void erase(T value) {
         erase(ROOT, value);
     }
+
 //    define the function to get the root element of the AVL tree
     T top() {
         if (ROOT == nullptr) return 0;
         return ROOT->key;
     }
+
 //    define the function to print out the elements of the AVL tree
     void print(bool sorted = false) {
         if (sorted) inOrder(ROOT);
         else preOrder(ROOT);
         cout << endl;
     }
+
 //    define the function to get size of the AVL tree
     int size() {
         return sz;
