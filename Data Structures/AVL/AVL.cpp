@@ -47,10 +47,10 @@ private:
                 }
 //            calculate heights of nodes
                 z->height =
-                        max((z->left == nullptr ? 0 : z->left->height), (z->right == nullptr ? 0 : z->left->height)) +
+                        max((z->left == nullptr ? 0 : z->left->height), (z->right == nullptr ? 0 : z->right->height)) +
                         1;
                 y->height =
-                        max((y->left == nullptr ? 0 : y->left->height), (y->right == nullptr ? 0 : y->left->height)) +
+                        max((y->left == nullptr ? 0 : y->left->height), (y->right == nullptr ? 0 : y->right->height)) +
                         1;
 
             }
@@ -77,13 +77,13 @@ private:
                 }
 //            calculate heights of nodes
                 z->height =
-                        max((z->left == nullptr ? 0 : z->left->height), (z->right == nullptr ? 0 : z->left->height)) +
+                        max((z->left == nullptr ? 0 : z->left->height), (z->right == nullptr ? 0 : z->right->height)) +
                         1;
                 y->height =
-                        max((y->left == nullptr ? 0 : y->left->height), (y->right == nullptr ? 0 : y->left->height)) +
+                        max((y->left == nullptr ? 0 : y->left->height), (y->right == nullptr ? 0 : y->right->height)) +
                         1;
                 x->height =
-                        max((x->left == nullptr ? 0 : x->left->height), (x->right == nullptr ? 0 : x->left->height)) +
+                        max((x->left == nullptr ? 0 : x->left->height), (x->right == nullptr ? 0 : x->right->height)) +
                         1;
             }
         }
@@ -113,13 +113,13 @@ private:
                 }
 //            calculate heights of nodes
                 z->height =
-                        max((z->left == nullptr ? 0 : z->left->height), (z->right == nullptr ? 0 : z->left->height)) +
+                        max((z->left == nullptr ? 0 : z->left->height), (z->right == nullptr ? 0 : z->right->height)) +
                         1;
                 y->height =
-                        max((y->left == nullptr ? 0 : y->left->height), (y->right == nullptr ? 0 : y->left->height)) +
+                        max((y->left == nullptr ? 0 : y->left->height), (y->right == nullptr ? 0 : y->right->height)) +
                         1;
                 x->height =
-                        max((x->left == nullptr ? 0 : x->left->height), (x->right == nullptr ? 0 : x->left->height)) +
+                        max((x->left == nullptr ? 0 : x->left->height), (x->right == nullptr ? 0 : x->right->height)) +
                         1;
             } else {
 //            Right Right case
@@ -141,10 +141,10 @@ private:
                 }
 //            calculate heights of nodes
                 z->height =
-                        max((z->left == nullptr ? 0 : z->left->height), (z->right == nullptr ? 0 : z->left->height)) +
+                        max((z->left == nullptr ? 0 : z->left->height), (z->right == nullptr ? 0 : z->right->height)) +
                         1;
                 y->height =
-                        max((y->left == nullptr ? 0 : y->left->height), (y->right == nullptr ? 0 : y->left->height)) +
+                        max((y->left == nullptr ? 0 : y->left->height), (y->right == nullptr ? 0 : y->right->height)) +
                         1;
             }
         }
@@ -357,6 +357,12 @@ int main() {
 //    create instance of AVL class
     AVL<int> x;
 //    insert numbers in the AVL tree
+    x.insert(78);
+    x.insert(1);
+    x.insert(36);
+    x.insert(8);
+    x.insert(22);
+    x.insert(15);
     x.insert(9);
     x.insert(5);
     x.insert(10);
