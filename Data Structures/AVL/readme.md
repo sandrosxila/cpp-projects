@@ -1,10 +1,10 @@
-#AVL Tree Data Structure
+# AVL Tree Data Structure
 
 There's given AVL tree implementation file. AVL tree class
 method names resemble names of the STL class methods. Here
 are example of use of the class.
 
-###Creation of the Class instance
+### Creation of the Class instance
 
 ```c++
 //pattern: class name <type name> instance name
@@ -19,7 +19,7 @@ _note: duplicates won't be inserted_
 object.insert(99);
 ```
 
-###Element *deletion* from the AVL tree
+### Element *deletion* from the AVL tree
 
 _note: non-existing elements won't be deleted_
 ```c++
@@ -27,7 +27,7 @@ _note: non-existing elements won't be deleted_
 object.erase(99);
 ```
 
-###_Printing_ elements
+### _Printing_ elements
 
 printing elements
 ```c++
@@ -44,13 +44,13 @@ or
 object.print(true);
 ```
 
-###Getting the *size* of the AVL three class instance
+### Getting the *size* of the AVL three class instance
 ```c++
 //pattern: instanceName.size()
 int sizeOfTree = object.size();
 ```
 
-###Getting the *root* element of the AVL tree
+### Getting the *root* element of the AVL tree
 ```c++
 //pattern: instanceName.size()
 int rootElement = object.top();
