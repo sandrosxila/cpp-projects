@@ -1,3 +1,4 @@
+/.idea
 /Data Structures/.idea
 /Data Structures/AVL/.idea
 /Data Structures/AVL/cmake-build-debug
@@ -7,6 +8,10 @@
 /Data Structures/Treap/test.txt
 /Data Structures/Treap/cmake-build-debug
 /Data Structures/Treap/CMakeLists.txt
+/Data Structures/2D_Segment_Tree/.idea
+/Data Structures/2D_Segment_Tree/test.txt
+/Data Structures/2D_Segment_Tree/cmake-build-debug
+/Data Structures/2D_Segment_Tree/CMakeLists.txt
 /Algorithms/.idea
 /Algorithms/KMP/.idea
 /Algorithms/KMP/cmake-build-debug
