@@ -64,7 +64,7 @@ void splitEq(int key, node *&current, node *&Left, node *&Right) {
         Left = current;
         node *next = current->right;
         Left->right = nullptr;
-        split(key, next, Left->right, Right);
+        splitEq(key, next, Left->right, Right);
         Left->size = getNodeSize(Left->left) + getNodeSize(Left->right) + 1;
         next = nullptr;
         delete next;
@@ -72,7 +72,7 @@ void splitEq(int key, node *&current, node *&Left, node *&Right) {
         Right = current;
         node *next = current->left;
         Right->left = nullptr;
-        split(key, next, Left, Right->left);
+        splitEq(key, next, Left, Right->left);
         Right->size = getNodeSize(Right->left) + getNodeSize(Right->right) + 1;
         next = nullptr;
         delete next;
@@ -91,10 +91,19 @@ void insert(node *&root, int key, int priority = rand()) {
     delete newLeft;
 }
 
+void destroy(node *&current){
+    if(current == nullptr) return;
+    destroy(current->left);
+    destroy(current->right);
+    delete current;
+}
+
 void erase(node *&root, int key) {
     node *LL= nullptr,*LR= nullptr,*RL= nullptr,*RR= nullptr;
     split(key,root,LL,LR);
     splitEq(key,LR,RL,RR);
+//    destroy(LR);
+    destroy(RL);
     root = merge(LL,RR);
 }
 
@@ -108,7 +117,6 @@ int get(node* &root, int k){
     }
     return get(root->left,k);
 }
-
 int main() {
     insert(ROOT,13,12);
     insert(ROOT,5,14);
@@ -123,9 +131,8 @@ int main() {
     insert(ROOT,19,10);
     insert(ROOT,17,0);
     insert(ROOT,20,5);
-    for(int i = 1; i <= 13;i++){
+    erase(ROOT,2);
+    for(int i = 1; i <= getNodeSize(ROOT);i++){
         cout<<get(ROOT,i)<<' ';
     }
-//    cout<<get(ROOT,4)<<endl;
-
 }
