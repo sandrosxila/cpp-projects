@@ -1,0 +1,32 @@
+"C:\Program Files\JetBrains\CLion 2019.3.1\bin\cmake\win\bin\cmake.exe" -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - MinGW Makefiles" "C:\Users\Sandro\Desktop\cpp-projects\Data Structures\Treap"
+-- The C compiler identification is unknown
+-- The CXX compiler identification is unknown
+-- Check for working C compiler: C:/MinGW/bin/gcc.exe
+CMake Error: Generator: execution of make failed. Make command was: C:/MinGW/bin/mingw32-make.exe cmTC_eea8c/fast && 
+-- Check for working C compiler: C:/MinGW/bin/gcc.exe -- broken
+CMake Error at C:/Program Files/JetBrains/CLion 2019.3.1/bin/cmake/win/share/cmake-3.16/Modules/CMakeTestCCompiler.cmake:60 (message):
+  The C compiler
+
+    "C:/MinGW/bin/gcc.exe"
+
+  is not able to compile a simple test program.
+
+  It fails with the following output:
+
+    Change Dir: C:/Users/Sandro/Desktop/cpp-projects/Data Structures/Treap/cmake-build-debug-mingw/CMakeFiles/CMakeTmp
+    
+    Run Build Command(s):C:/MinGW/bin/mingw32-make.exe cmTC_eea8c/fast && Exit code 0xc0000135
+    
+    Generator: execution of make failed. Make command was: C:/MinGW/bin/mingw32-make.exe cmTC_eea8c/fast && 
+    
+
+  
+
+  CMake will not be able to correctly generate this project.
+Call Stack (most recent call first):
+  CMakeLists.txt:2 (project)
+
+
+-- Configuring incomplete, errors occurred!
+See also "C:/Users/Sandro/Desktop/cpp-projects/Data Structures/Treap/cmake-build-debug-mingw/CMakeFiles/CMakeOutput.log".
+See also "C:/Users/Sandro/Desktop/cpp-projects/Data Structures/Treap/cmake-build-debug-mingw/CMakeFiles/CMakeError.log".
