@@ -101,6 +101,23 @@ private:
         delete current;
     }
 
+    bool destroy_one(node *&current){
+        if(current == nullptr) return false;
+        if(current->left == nullptr && current->right == nullptr){
+            current = nullptr;
+//            delete current;
+            return true;
+        }
+        if(!destroy_one(current->left)){
+            if(destroy_one(current->right)){
+                current->size = getNodeSize(current->left) + getNodeSize(current->right) + 1;
+                return true;
+            }
+        }
+        current->size = getNodeSize(current->left) + getNodeSize(current->right) + 1;
+        return true;
+    }
+
     void erase(node *&root, T key) {
         node *LL= nullptr,*LR= nullptr,*RL= nullptr,*RR= nullptr;
         split(key,root,LL,LR);
@@ -110,8 +127,17 @@ private:
         root = merge(LL,RR);
     }
 
+    void pop(node *&root, T key) {
+        node *LL= nullptr,*LR= nullptr,*RL= nullptr,*RR= nullptr;
+        split(key,root,LL,LR);
+        splitEq(key,LR,RL,RR);
+        destroy_one(RL);
+        node *RH = merge(RL,RR);
+        root = merge(LL,RH);
+    }
+
     T get(node* &root, int k){
-        if(root == nullptr) return 0;
+        if(root == nullptr) return -1;
         if(getNodeSize(root->left) + 1 == k){
             return root->key;
         }
@@ -138,6 +164,9 @@ public:
     void erase(T key){
         erase(ROOT,key);
     }
+    void pop(T key){
+        pop(ROOT,key);
+    }
     T get(int index){
         return get(ROOT,index);
     }
@@ -149,29 +178,56 @@ public:
     }
 };
 
-
+int t,n;
 int main() {
     Treap <int> T;
-    T.insert(13,12);
-    T.insert(5,14);
-    T.insert(15,7);
-    T.insert(3,8);
-    T.insert(14,2);
-    T.insert(4,1);
-    T.insert(7,9);
-    T.insert(0,6);
-    T.insert(18,3);
-    T.insert(2,11);
-    T.insert(19,10);
-    T.insert(17,0);
-    T.insert(20,5);
-    T.erase(2);
-    for(int i = 1; i <= T.size();i++){
-        cout<<T.get(i)<<',';
-    }
-    int arr [] = {0,3,4,5,7,13,14,15,17,18,19,20};
-    cout<<endl;
-    for (int i = 0; i< T.size();i++){
-        cout<<T.getIndex(arr[i])<<' ';
+//    T.insert(15);
+//    T.insert(29);
+//    T.insert(6);
+//    T.insert(9);
+//    T.insert(9);
+//    T.insert(58);
+//    T.insert(58);
+//    T.insert(58);
+//    for(int i = 1; i<=T.size(); i++){
+//        cout<< T.get(i) << ' ';
+//    }
+//    cout<<endl;
+//    T.pop(58);
+//    T.pop(109);
+//    T.pop(15);
+//    T.insert(25);
+//    T.insert(25);
+//    T.insert(25);
+//    T.pop(25);
+////    cout<<T.get(7);
+//    for(int i = 1; i<=T.size(); i++){
+//        cout<< T.get(i) << ' ';
+//    }
+//    cout<<endl;
+//    cout<<T.getIndex(58)<<endl;
+//    cout<<T.get(4)<<endl;
+
+    while(true){
+        scanf("%d", &t);
+        if(t == 1){
+            scanf("%d",&n);
+            T.insert(n);
+        }
+        if(t==2){
+            scanf("%d",&n);
+            T.pop(n);
+        }
+        if(t==3){
+            scanf("%d",&n);
+            printf("%d\n",T.getIndex(n));
+        }
+        if(t==4){
+            scanf("%d",&n);
+            printf("%d\n",T.get(n));
+        }
+        if(t==-1){
+            break;
+        }
     }
 }
