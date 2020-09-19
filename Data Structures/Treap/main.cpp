@@ -20,7 +20,7 @@ private:
         }
     } *ROOT = nullptr, *LEFT = nullptr, *RIGHT = nullptr;
 
-    int getNodeSize(node* &obj){
+    inline int getNodeSize(node* &obj){
         if(obj == nullptr)
             return 0;
         return obj->size;
@@ -105,7 +105,7 @@ private:
         if(current == nullptr) return false;
         if(current->left == nullptr && current->right == nullptr){
             current = nullptr;
-//            delete current;
+            delete current;
             return true;
         }
         if(!destroy_one(current->left)){
@@ -173,7 +173,7 @@ public:
     int getIndex(T key){
         return getIndex(ROOT, key);
     }
-    int size(){
+    inline int size(){
         return getNodeSize(ROOT);
     }
 };
@@ -181,53 +181,34 @@ public:
 int t,n;
 int main() {
     Treap <int> T;
-//    T.insert(15);
-//    T.insert(29);
-//    T.insert(6);
-//    T.insert(9);
-//    T.insert(9);
-//    T.insert(58);
-//    T.insert(58);
-//    T.insert(58);
-//    for(int i = 1; i<=T.size(); i++){
-//        cout<< T.get(i) << ' ';
-//    }
-//    cout<<endl;
-//    T.pop(58);
-//    T.pop(109);
-//    T.pop(15);
-//    T.insert(25);
-//    T.insert(25);
-//    T.insert(25);
-//    T.pop(25);
-////    cout<<T.get(7);
-//    for(int i = 1; i<=T.size(); i++){
-//        cout<< T.get(i) << ' ';
-//    }
-//    cout<<endl;
-//    cout<<T.getIndex(58)<<endl;
-//    cout<<T.get(4)<<endl;
-
-    while(true){
-        scanf("%d", &t);
-        if(t == 1){
-            scanf("%d",&n);
-            T.insert(n);
-        }
-        if(t==2){
-            scanf("%d",&n);
-            T.pop(n);
-        }
-        if(t==3){
-            scanf("%d",&n);
-            printf("%d\n",T.getIndex(n));
-        }
-        if(t==4){
-            scanf("%d",&n);
-            printf("%d\n",T.get(n));
-        }
-        if(t==-1){
-            break;
-        }
+    T.insert(15);
+    T.insert(29);
+    T.insert(6);
+    T.insert(9);
+    T.insert(9);
+    T.insert(58);
+    T.insert(58);
+    T.insert(58);
+    for(int i = 1; i<=T.size(); i++){
+        cout<< T.get(i) << ' ';
     }
+    cout<<endl;
+    T.pop(58);
+    T.pop(109);
+    T.pop(15);
+    T.insert(25);
+    T.insert(25);
+    T.insert(25);
+    T.erase(25);
+    T.insert(25);
+    T.insert(25);
+    T.pop(25);
+//    cout<<T.get(7);
+    for(int i = 1; i<=T.size(); i++){
+        cout<< T.get(i) << ' ';
+    }
+    cout<<endl;
+    cout<<T.getIndex(58)<<endl;
+    cout<<T.get(4)<<endl;
+
 }
