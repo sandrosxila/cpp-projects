@@ -199,6 +199,10 @@ int main() {
     T.insert(25);
     T.insert(25);
     T.insert(25);
+    for(int i = 1; i<=T.size(); i++){
+        cout<< T.get(i) << ' ';
+    }
+    cout<<endl;
     T.erase(25);
     T.insert(25);
     T.insert(25);
