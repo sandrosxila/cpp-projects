@@ -21,6 +21,7 @@ private:
 
     struct bNode {
         int *size;
+        bool is_leaf = true;
         bNode *parent = nullptr;
         vector<element<bNode *> *> elements;
 
@@ -101,11 +102,13 @@ private:
             }
             for (int i = node->elements.size() / 2; i != node->elements.size(); node->elements.pop_back());
 
+            new_node->is_leaf = node->is_leaf;
             new_element->right_child = new_node;
             new_element->left_child = node;
             new_element->right_child->parent = node->parent;
             new_element->left_child->parent = node->parent;
             node->parent->addElement(new_element);
+            node->parent->is_leaf = false;
 
             if(node == ROOT){
                 ROOT = node->parent;
