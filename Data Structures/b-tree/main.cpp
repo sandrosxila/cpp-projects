@@ -15,9 +15,9 @@ private:
         U left_child = nullptr;
         U right_child = nullptr;
 
-        element(T val) {
-            value = val;
-        }
+        explicit element(T value) : value(value) {}
+
+        element(T value, U leftChild, U rightChild) : value(value), left_child(leftChild), right_child(rightChild) {}
     };
 
     struct bNode {
@@ -75,13 +75,13 @@ private:
         } else {
             for (int idx = 0; idx < current->elements.size(); idx++) {
                 if (current->elements[idx]->value == elem) {
-                    return {current, idx, parent_index, side};
+                    return {current, idx, parent_index, false};
                 }
                 if (current->elements[idx]->value > elem) {
                     if (current->elements[idx]->left_child != nullptr)
                         return find(elem, current->elements[idx]->left_child, idx, false);
                     else {
-                        return {current, idx, parent_index, side};
+                        return {current, idx, parent_index, false};
                     }
                 }
             }
@@ -144,52 +144,179 @@ private:
         }
     }
 
-    void erase(T elem, bNode *&root) {
-        if (root != nullptr) {
-            tuple<bNode *, int, int, bool> place = find(elem, root);
-            bNode *node = get<0>(place);
-            int pos = get<1>(place);
-            int parent_pos = get<2>(place);
-            int side = get<3>(place);
-            if (node != nullptr) {
-                if (node->is_leaf) {
-                    if (node->elements.size() > min_elements) {
-                        node->elements.erase(node->elements.begin() + pos);
-                    } else if (node->elements.size() == min_elements) {
-                        bNode *right_sibling = nullptr;
-                        bNode *left_sibling = nullptr;
-                        int left_parent_pos, right_parent_pos;
-                        if (side == false) {
-                            right_parent_pos = parent_pos;
-                            right_sibling = node->parent->elements[right_parent_pos]->right_child;
-                            if (parent_pos != 0) {
-                                left_parent_pos = parent_pos - 1;
-                                left_sibling = node->parent->elements[left_parent_pos]->left_child;
-                            }
-                        }
-                        if (side == true) {
-                            left_parent_pos = parent_pos;
+
+
+    void erase_and_borrow_from_left(bNode * node,bNode *left_sibling, int pos, int parent_pos){
+        node->elements.erase(node->elements.begin() + pos);
+        node->addElement(node->parent->elements[parent_pos]->value);
+        node->parent->elements[parent_pos]->value = left_sibling->elements.back()->value;
+        left_sibling->elements.pop_back();
+    }
+
+    void erase_and_borrow_from_right(bNode * node,bNode *right_sibling, int pos, int parent_pos){
+        node->elements.erase(node->elements.begin() + pos);
+        node->addElement(node->parent->elements[parent_pos]->value);
+        node->parent->elements[parent_pos]->value = right_sibling->elements.front()->value;
+        right_sibling->elements.erase(right_sibling->elements.begin());
+    }
+
+    void erase_and_merge_left(bNode * node,bNode *left_sibling, int pos, int left_parent_pos){
+        node->elements.erase(node->elements.begin() + pos);
+        node->addElement(node->parent->elements[left_parent_pos]->value);
+        for (int idx = 0; idx < min_elements; idx++)node->addElement(left_sibling->elements[idx]->value);
+        for (;!left_sibling->elements.empty();left_sibling->elements.pop_back());
+        if(0 <= left_parent_pos - 1){
+            node->parent->elements[left_parent_pos - 1]->right_child = node;
+        }
+        if(node->parent->elements.size() > left_parent_pos+1){
+            node->parent->elements[left_parent_pos + 1]->left_child = node;
+        }
+        node->parent->elements.erase(node->parent->elements.begin() + left_parent_pos);
+        delete left_sibling;
+    }
+
+    void erase_and_merge_right(bNode *node,bNode *right_sibling, int pos, int right_parent_pos){
+        node->elements.erase(node->elements.begin() + pos);
+        node->addElement(node->parent->elements[right_parent_pos]->value);
+        for (int idx = 0; idx < min_elements; idx++)node->addElement(right_sibling->elements[idx]->value);
+        for (;!right_sibling->elements.empty();right_sibling->elements.pop_back());
+        if(node->parent->elements.size() > right_parent_pos + 1){
+            node->parent->elements[right_parent_pos + 1]->left_child = node;
+        }
+        if(0 <= right_parent_pos - 1){
+            node->parent->elements[right_parent_pos - 1]->right_child = node;
+        }
+        node->parent->elements.erase(node->parent->elements.begin() + right_parent_pos);
+        delete right_sibling;
+    }
+
+    void erase_dispatch(bNode *&node ,int pos, int parent_pos, bool side) {
+        if (node != nullptr) {
+            if (node->is_leaf) {
+                if (node->elements.size() > min_elements) {
+                    node->elements.erase(node->elements.begin() + pos);
+                } else if (node->elements.size() == min_elements) {
+                    bNode *right_sibling = nullptr;
+                    bNode *left_sibling = nullptr;
+                    int left_parent_pos, right_parent_pos;
+                    if (!side) {
+                        right_parent_pos = parent_pos;
+                        right_sibling = node->parent->elements[right_parent_pos]->right_child;
+                        if (parent_pos != 0) {
+                            left_parent_pos = parent_pos - 1;
                             left_sibling = node->parent->elements[left_parent_pos]->left_child;
-                            if (parent_pos != node->parent->elements.size() - 1) {
-                                right_parent_pos = parent_pos + 1;
-                                right_sibling = node->parent->elements[right_parent_pos]->left_child;
-                            }
                         }
-                        if (left_sibling != nullptr && left_sibling->elements.size() > min_elements) {
-                            node->elements.erase(node->elements.begin() + pos);
-                            node->addElement(node->parent->elements[parent_pos]->value);
-                            node->parent->elements[parent_pos]->value = left_sibling->elements.back()->value;
-                            left_sibling->elements.pop_back();
+                    }
+                    else {
+                        left_parent_pos = parent_pos;
+                        left_sibling = node->parent->elements[left_parent_pos]->left_child;
+                        if (parent_pos != node->parent->elements.size() - 1) {
+                            right_parent_pos = parent_pos + 1;
+                            right_sibling = node->parent->elements[right_parent_pos]->left_child;
                         }
-                        else if (right_sibling != nullptr && right_sibling->elements.size() > min_elements){
-                            node->elements.erase(node->elements.begin() + pos);
-                            node->addElement(node->parent->elements[parent_pos]->value);
-                            node->parent->elements[parent_pos]->value = right_sibling->elements.front()->value;
-                            right_sibling->elements.erase(right_sibling->elements.begin());
-                        }
+                    }
+                    if (left_sibling != nullptr && left_sibling->elements.size() > min_elements) {
+                        erase_and_borrow_from_left(node,left_sibling,pos,parent_pos);
+                    }
+                    else if (right_sibling != nullptr && right_sibling->elements.size() > min_elements){
+                        erase_and_borrow_from_right(node,right_sibling,pos,parent_pos);
+                    }
+                    else if (left_sibling != nullptr && left_sibling->elements.size() == min_elements){
+                        erase_and_merge_left(node, left_sibling, pos, left_parent_pos);
+                    }
+                    else if (right_sibling != nullptr && right_sibling->elements.size() == min_elements){
+                        erase_and_merge_right(node, right_sibling, pos, right_parent_pos);
                     }
                 }
             }
+        }
+    }
+
+    void shrink_height(bNode* node,int parent_pos,bool side){
+        bNode *right_sibling = nullptr;
+        bNode *left_sibling = nullptr;
+        int left_parent_pos, right_parent_pos;
+        if (!side) {
+            right_parent_pos = parent_pos;
+            right_sibling = node->parent->elements[right_parent_pos]->right_child;
+            if (parent_pos != 0) {
+                left_parent_pos = parent_pos - 1;
+                left_sibling = node->parent->elements[left_parent_pos]->left_child;
+            }
+        }
+        else {
+            left_parent_pos = parent_pos;
+            left_sibling = node->parent->elements[left_parent_pos]->left_child;
+            if (parent_pos != node->parent->elements.size() - 1) {
+                right_parent_pos = parent_pos + 1;
+                right_sibling = node->parent->elements[right_parent_pos]->left_child;
+            }
+        }
+        if (left_sibling != nullptr && left_sibling->elements.size() > min_elements) {
+            node->addElement(new element<bNode *>(node->parent->elements[parent_pos]->value,left_sibling->elements.front()->right_child,node->elements.back()->left_child));
+            node->parent->elements[parent_pos]->value = left_sibling->elements.back()->value;
+            left_sibling->elements.pop_back();
+        }
+        else if (right_sibling != nullptr && right_sibling->elements.size() > min_elements){
+            node->addElement(new element<bNode *>(node->parent->elements[parent_pos]->value,node->elements.back()->right_child,right_sibling->elements.front()->left_child));
+            node->parent->elements[parent_pos]->value = right_sibling->elements.front()->value;
+            right_sibling->elements.erase(right_sibling->elements.begin());
+        }
+        else if (left_sibling != nullptr && left_sibling->elements.size() == min_elements){
+            node->parent->elements[parent_pos]->left_child = left_sibling->elements.back()->right_child;
+            node->parent->elements[parent_pos]->right_child = node->elements.front()->left_child;
+            node->addElement(node->parent->elements[parent_pos]);
+            node->parent->elements.erase(node->parent->elements.begin() + parent_pos);
+
+            for (int idx = 0; idx < min_elements; idx++)node->addElement(left_sibling->elements[idx]);
+            for (;!left_sibling->elements.empty();left_sibling->elements.pop_back());
+
+            if(node->parent->elements.size() == 0){
+                ROOT = node;
+                delete node->parent;
+                node->parent = nullptr;
+            }
+
+        }
+        else if (right_sibling != nullptr && right_sibling->elements.size() == min_elements){
+            node->parent->elements[parent_pos]->left_child = node->elements.back()->right_child;
+            node->parent->elements[parent_pos]->right_child = right_sibling->elements.front()->left_child;
+            node->addElement(node->parent->elements[parent_pos]);
+            node->parent->elements.erase(node->parent->elements.begin() + parent_pos);
+
+            for (int idx = 0; idx < min_elements; idx++)node->addElement(right_sibling->elements[idx]);
+            for (;!right_sibling->elements.empty();right_sibling->elements.pop_back());
+
+            if(node->parent->elements.size() == 0){
+                ROOT = node;
+                delete node->parent;
+                node->parent = nullptr;
+            }
+        }
+
+    }
+
+    void erase(T elem, bNode *&current, int parent_index = -1, bool side = false) {
+        if (elem > current->elements.back()->value) {
+            if (current->elements.back()->right_child != nullptr)
+                erase(elem, current->elements.back()->right_child, int(current->elements.size()) - 1, true);
+            else erase_dispatch(current, int(current->elements.size()), parent_index, side);
+        } else {
+            for (int idx = 0; idx < current->elements.size(); idx++) {
+                if (current->elements[idx]->value == elem) {
+                    erase_dispatch(current, idx, parent_index, false);
+                }
+                if (current->elements[idx]->value > elem) {
+                    if (current->elements[idx]->left_child != nullptr)
+                        erase(elem, current->elements[idx]->left_child, idx, false);
+                    else {
+                        erase_dispatch(current, idx, parent_index, false);
+                    }
+                }
+            }
+        }
+        if(current!=nullptr && current->parent != nullptr && current->elements.size() < min_elements){
+            shrink_height(current,parent_index,side);
         }
     }
 
@@ -351,6 +478,8 @@ int main() {
     b.erase(64);
     b.erase(23);
     b.erase(72);
+    b.erase(65);
+    b.erase(20);
     cout << "end";
 
     return 0;
