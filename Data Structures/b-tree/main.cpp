@@ -269,6 +269,165 @@ private:
         }
     }
 
+    bNode* get_right_sibling(bNode* node, bool side, int parent_pos){
+        if(node->has_parent()){
+            if(node->parent->has_right_child_at(side ? parent_pos + 1 : parent_pos))
+                return node->parent->at(side ? parent_pos + 1 : parent_pos)->right_child;
+        }
+        return nullptr;
+    }
+
+    bNode* get_left_sibling(bNode* node, bool side, int parent_pos){
+        if(node->has_parent()){
+            if(node->parent->has_left_child_at(side ? parent_pos : parent_pos - 1))
+                return node->parent->at(side ? parent_pos : parent_pos - 1)->left_child;
+        }
+        return nullptr;
+    }
+
+    void merge_to_left(bNode *&left_node, bNode *right_node){
+        left_node->last()->right_child = right_node->get_leftmost_child();
+        while(!right_node->empty()){
+            left_node->add_last(right_node->pop_first());
+        }
+        delete right_node;
+    }
+
+    void merge_to_right(bNode *left_node, bNode *&right_node){
+        right_node->first()->left_child = left_node->get_rightmost_child();
+        while(!left_node->empty()){
+            right_node->add_first(left_node->pop_last());
+        }
+        delete left_node;
+    }
+
+    void propagate_to_left_sibling(bNode* node,int parent_pos, bNode* left_sibling){
+        element<bNode *> *left_element = node->parent->pop_at(parent_pos);
+        left_element->left_child = left_sibling->get_rightmost_child();
+        left_element->right_child = nullptr;
+        left_sibling->add_last(left_element);
+        element<bNode *> *parent_element = node->pop_first();
+        parent_element->left_child = left_sibling;
+        parent_element->right_child = node;
+        node->parent->add_at(parent_pos,parent_element);
+    }
+
+    void propagate_to_right_sibling(bNode* node,int parent_pos, bNode* right_sibling){
+        element<bNode *> *right_element = node->parent->pop_at(parent_pos);
+        right_element->left_child = nullptr;
+        right_element->right_child = right_sibling->get_leftmost_child();
+        right_sibling->add_first(right_element);
+        element<bNode *> *parent_element = node->pop_last();
+        parent_element->left_child = node;
+        parent_element->right_child = right_sibling;
+        node->parent->add_at(parent_pos,parent_element);
+    }
+
+    void propagate_down_from_left(bNode* node, int parent_pos, bNode* left_sibling){
+        element<bNode *> *parent_element = node->parent->pop_at(parent_pos);
+        if(node->parent->has_right_child_at(parent_pos - 1)){
+            if(node->parent->has_left_child_at(parent_pos)){
+                node->parent->at(parent_pos)->left_child = node->parent->at(parent_pos - 1)->right_child;
+            }
+            else{
+                node->parent->at(parent_pos - 1)->right_child = nullptr;
+            }
+        }
+        parent_element->left_child = nullptr;
+        parent_element->right_child = node->get_leftmost_child();
+        node->add_first(parent_element);
+        merge_to_right(left_sibling,node);
+    }
+
+    void propagate_down_from_right(bNode* node, int parent_pos, bNode* right_sibling){
+        element<bNode *> *parent_element = node->parent->pop_at(parent_pos);
+        if(node->parent->has_right_child_at(parent_pos - 1)){
+            if(node->parent->has_left_child_at(parent_pos)){
+                node->parent->at(parent_pos)->left_child = node->parent->at(parent_pos - 1)->right_child;
+            }
+            else{
+                node->parent->at(parent_pos - 1)->right_child = nullptr;
+            }
+        }
+        parent_element->left_child = node->get_rightmost_child();
+        parent_element->right_child = nullptr;
+        node->add_last(parent_element);
+        merge_to_left(node,right_sibling);
+    }
+
+//    different cases of deletion are implemented here
+    void erase_dispatch(bNode* node, int position, int parent_position, bool side){
+        if(node->is_leaf){
+//            case 1: when leaf-node has more than minimum number of elements
+            if(node->size() > min_elements){
+                node->pop_at(position);
+            }
+            else if(node->size() == min_elements){
+                bNode* left_sibling = get_left_sibling(node,side,parent_position);
+                bNode* right_sibling = get_right_sibling(node,side,parent_position);
+
+//                case 2: when leaf node has minimum number of elements and left-sibling with more than minimum number of elements
+                if(left_sibling != nullptr && left_sibling->size() > min_elements){
+                    node->pop_at(position);
+                    propagate_to_left_sibling(node, side ? parent_position : parent_position - 1, left_sibling);
+                }
+//                case 3: when leaf node has minimum number of elements and right-sibling with more than minimum number of elements
+                else if(right_sibling != nullptr && right_sibling->size() > min_elements){
+                    node->pop_at(position);
+                    propagate_to_right_sibling(node, side ? parent_position + 1 : parent_position, right_sibling);
+                }
+//                case 4: when leaf node has minimum number of elements and left-sibling with minimum number of elements
+                else if(left_sibling != nullptr && left_sibling->size() > min_elements){
+                    node->pop_at(position);
+                    propagate_down_from_left(node, side ? parent_position : parent_position - 1, left_sibling);
+                }
+//                case 5: when leaf node has minimum number of elements and right-sibling with minimum number of elements
+                else if(right_sibling != nullptr && right_sibling->size() > min_elements){
+                    node->pop_at(position);
+                    propagate_down_from_right(node,side ? parent_position + 1 : parent_position,right_sibling);
+                }
+            }
+        }
+        else{
+
+        }
+    }
+
+//    deletion of element
+    void erase(T elem, bNode *current, int parent_index = -1, bool side = false) {
+        if (current->empty()) {
+            return;
+        }
+        else if (elem > current->last()->value) {
+            if (current->has_rightmost_child()) {
+                erase(elem, current->get_rightmost_child(), current->size() - 1, true);
+            }
+            else {
+                return;
+            }
+        }
+        else {
+            for (int idx = 0; idx < current->size(); idx++) {
+                if (elem == current->value_at(idx)) {
+
+                    break;
+                }
+                else if (elem < current->value_at(idx)) {
+                    if (current->has_left_child_at(idx)) {
+                        erase(elem, current->left_child_at(idx), idx, false);
+                        break;
+                    }
+                    else {
+                        return;
+                    }
+                }
+            }
+        }
+        if (current != ROOT && current->size() < min_elements) {
+            
+        }
+    }
+
 public:
     explicit bTree(int Base) {
         ROOT = new bNode();
