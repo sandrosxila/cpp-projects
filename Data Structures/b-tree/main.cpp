@@ -134,7 +134,7 @@ private:
 
 //        check if element at index has a right child
         bool has_right_child_at(int index){
-            if(index > size() || index < 0){
+            if(index >= size() || index < 0){
                 return false;
             }
             if(at(index)->has_right_child()){
@@ -301,23 +301,23 @@ private:
         delete left_node;
     }
 
-    void propagate_to_left_sibling(bNode* node,int parent_pos, bNode* left_sibling){
-        element<bNode *> *left_element = node->parent->pop_at(parent_pos);
-        left_element->left_child = left_sibling->get_rightmost_child();
-        left_element->right_child = nullptr;
-        left_sibling->add_last(left_element);
-        element<bNode *> *parent_element = node->pop_first();
+    void propagate_from_left_sibling(bNode* node,int parent_pos, bNode* left_sibling){
+        element<bNode *> *node_element = node->parent->pop_at(parent_pos);
+        node_element->left_child = left_sibling->get_rightmost_child();
+        node_element->right_child = node->get_leftmost_child();
+        node->add_first(node_element);
+        element<bNode *> *parent_element = left_sibling->pop_last();
         parent_element->left_child = left_sibling;
         parent_element->right_child = node;
         node->parent->add_at(parent_pos,parent_element);
     }
 
-    void propagate_to_right_sibling(bNode* node,int parent_pos, bNode* right_sibling){
-        element<bNode *> *right_element = node->parent->pop_at(parent_pos);
-        right_element->left_child = nullptr;
-        right_element->right_child = right_sibling->get_leftmost_child();
-        right_sibling->add_first(right_element);
-        element<bNode *> *parent_element = node->pop_last();
+    void propagate_from_right_sibling(bNode* node,int parent_pos, bNode* right_sibling){
+        element<bNode *> *node_element = node->parent->pop_at(parent_pos);
+        node_element->left_child = node->get_rightmost_child();
+        node_element->right_child = right_sibling->get_leftmost_child();
+        node->add_last(node_element);
+        element<bNode *> *parent_element = right_sibling->pop_first();
         parent_element->left_child = node;
         parent_element->right_child = right_sibling;
         node->parent->add_at(parent_pos,parent_element);
@@ -326,33 +326,48 @@ private:
     void propagate_down_from_left(bNode* node, int parent_pos, bNode* left_sibling){
         element<bNode *> *parent_element = node->parent->pop_at(parent_pos);
         if(node->parent->has_right_child_at(parent_pos - 1)){
-            if(node->parent->has_left_child_at(parent_pos)){
-                node->parent->at(parent_pos)->left_child = node->parent->at(parent_pos - 1)->right_child;
-            }
-            else{
-                node->parent->at(parent_pos - 1)->right_child = nullptr;
-            }
+            node->parent->at(parent_pos - 1)->right_child = node;
         }
         parent_element->left_child = nullptr;
         parent_element->right_child = node->get_leftmost_child();
         node->add_first(parent_element);
         merge_to_right(left_sibling,node);
+        if (node->parent == ROOT && ROOT->size() == 0){
+            ROOT = node;
+            delete node->parent;
+            node->parent = nullptr;
+        }
     }
 
     void propagate_down_from_right(bNode* node, int parent_pos, bNode* right_sibling){
         element<bNode *> *parent_element = node->parent->pop_at(parent_pos);
-        if(node->parent->has_right_child_at(parent_pos - 1)){
-            if(node->parent->has_left_child_at(parent_pos)){
-                node->parent->at(parent_pos)->left_child = node->parent->at(parent_pos - 1)->right_child;
-            }
-            else{
-                node->parent->at(parent_pos - 1)->right_child = nullptr;
-            }
+        if(node->parent->has_left_child_at(parent_pos)){
+            node->parent->at(parent_pos)->left_child = node;
         }
         parent_element->left_child = node->get_rightmost_child();
         parent_element->right_child = nullptr;
         node->add_last(parent_element);
         merge_to_left(node,right_sibling);
+        if (node->parent == ROOT && ROOT->size() == 0){
+            ROOT = node;
+            delete node->parent;
+            node->parent = nullptr;
+        }
+    }
+
+//    restore minimum number of elements in node
+    void balance (bNode* node, int parent_position, bool side){
+        bNode* left_sibling = get_left_sibling(node,side,parent_position);
+        bNode* right_sibling = get_right_sibling(node,side,parent_position);
+
+        if(left_sibling != nullptr && left_sibling->size() > min_elements)
+            propagate_from_left_sibling(node, side ? parent_position : parent_position - 1, left_sibling);
+        else if(right_sibling != nullptr && right_sibling->size() > min_elements)
+            propagate_from_right_sibling(node, side ? parent_position + 1 : parent_position, right_sibling);
+        else if(left_sibling != nullptr && left_sibling->size() == min_elements)
+            propagate_down_from_left(node, side ? parent_position : parent_position - 1, left_sibling);
+        else if(right_sibling != nullptr && right_sibling->size() == min_elements)
+            propagate_down_from_right(node,side ? parent_position + 1 : parent_position,right_sibling);
     }
 
 //    different cases of deletion are implemented here
@@ -369,20 +384,20 @@ private:
 //                case 2: when leaf node has minimum number of elements and left-sibling with more than minimum number of elements
                 if(left_sibling != nullptr && left_sibling->size() > min_elements){
                     node->pop_at(position);
-                    propagate_to_left_sibling(node, side ? parent_position : parent_position - 1, left_sibling);
+                    propagate_from_left_sibling(node, side ? parent_position : parent_position - 1, left_sibling);
                 }
 //                case 3: when leaf node has minimum number of elements and right-sibling with more than minimum number of elements
                 else if(right_sibling != nullptr && right_sibling->size() > min_elements){
                     node->pop_at(position);
-                    propagate_to_right_sibling(node, side ? parent_position + 1 : parent_position, right_sibling);
+                    propagate_from_right_sibling(node, side ? parent_position + 1 : parent_position, right_sibling);
                 }
 //                case 4: when leaf node has minimum number of elements and left-sibling with minimum number of elements
-                else if(left_sibling != nullptr && left_sibling->size() > min_elements){
+                else if(left_sibling != nullptr && left_sibling->size() == min_elements){
                     node->pop_at(position);
                     propagate_down_from_left(node, side ? parent_position : parent_position - 1, left_sibling);
                 }
 //                case 5: when leaf node has minimum number of elements and right-sibling with minimum number of elements
-                else if(right_sibling != nullptr && right_sibling->size() > min_elements){
+                else if(right_sibling != nullptr && right_sibling->size() == min_elements){
                     node->pop_at(position);
                     propagate_down_from_right(node,side ? parent_position + 1 : parent_position,right_sibling);
                 }
@@ -409,7 +424,7 @@ private:
         else {
             for (int idx = 0; idx < current->size(); idx++) {
                 if (elem == current->value_at(idx)) {
-
+                    erase_dispatch(current,idx,parent_index,side);
                     break;
                 }
                 else if (elem < current->value_at(idx)) {
@@ -424,8 +439,139 @@ private:
             }
         }
         if (current != ROOT && current->size() < min_elements) {
-            
+            balance(current,parent_index,side);
         }
+    }
+
+    void build_test(bNode *&root) {
+        // root node
+        root = new bNode();
+        root->is_leaf = false;
+        root->add(new element<bNode *>(50));
+        root->add(new element<bNode *>(80));
+
+        //middle nodes
+
+        //middle node 1
+        auto middle_node1 = new bNode();
+        middle_node1->is_leaf = false;
+        middle_node1->add(new element<bNode *>(10));
+        middle_node1->add(new element<bNode *>(20));
+        //middle node 2
+        auto middle_node2 = new bNode();
+        middle_node2->is_leaf = false;
+        middle_node2->add(new element<bNode *>(60));
+        middle_node2->add(new element<bNode *>(70));
+        middle_node2->add(new element<bNode *>(75));
+        //middle node 3
+        auto middle_node3 = new bNode();
+        middle_node3->is_leaf = false;
+        middle_node3->add(new element<bNode *>(90));
+        middle_node3->add(new element<bNode *>(95));
+
+        //low nodes
+
+        //low node 1
+        auto low_node1 = new bNode();
+        low_node1->add(new element<bNode *>(4));
+        low_node1->add(new element<bNode *>(5));
+        low_node1->add(new element<bNode *>(6));
+
+        //low node 2
+        auto low_node2 = new bNode();
+        low_node2->add(new element<bNode *>(14));
+        low_node2->add(new element<bNode *>(15));
+        low_node2->add(new element<bNode *>(16));
+
+        //low node 3
+        auto low_node3 = new bNode();
+        low_node3->add(new element<bNode *>(23));
+        low_node3->add(new element<bNode *>(27));
+
+        //low node 4
+        auto low_node4 = new bNode();
+        low_node4->add(new element<bNode *>(51));
+        low_node4->add(new element<bNode *>(52));
+
+        //low node 5
+        auto low_node5 = new bNode();
+        low_node5->add(new element<bNode *>(64));
+        low_node5->add(new element<bNode *>(65));
+        low_node5->add(new element<bNode *>(68));
+
+        //low node 6
+        auto low_node6 = new bNode();
+        low_node6->add(new element<bNode *>(72));
+        low_node6->add(new element<bNode *>(73));
+
+        //low node 7
+        auto low_node7 = new bNode();
+        low_node7->add(new element<bNode *>(77));
+        low_node7->add(new element<bNode *>(78));
+        low_node7->add(new element<bNode *>(79));
+
+        //low node 8
+        auto low_node8 = new bNode();
+        low_node8->add(new element<bNode *>(81));
+        low_node8->add(new element<bNode *>(82));
+        low_node8->add(new element<bNode *>(89));
+
+        //low node 9
+        auto low_node9 = new bNode();
+        low_node9->add(new element<bNode *>(92));
+        low_node9->add(new element<bNode *>(93));
+
+        //low node 10
+        auto low_node10 = new bNode();
+        low_node10->add(new element<bNode *>(108));
+        low_node10->add(new element<bNode *>(110));
+        low_node10->add(new element<bNode *>(118));
+
+        //building low-level
+
+        low_node1->parent = middle_node1;
+        low_node2->parent = middle_node1;
+        low_node3->parent = middle_node1;
+
+        middle_node1->elements[0]->left_child = low_node1;
+        middle_node1->elements[0]->right_child = low_node2;
+        middle_node1->elements[1]->left_child = low_node2;
+        middle_node1->elements[1]->right_child = low_node3;
+
+        low_node4->parent = middle_node2;
+        low_node5->parent = middle_node2;
+        low_node6->parent = middle_node2;
+        low_node7->parent = middle_node2;
+
+        middle_node2->elements[0]->left_child = low_node4;
+        middle_node2->elements[0]->right_child = low_node5;
+        middle_node2->elements[1]->left_child = low_node5;
+        middle_node2->elements[1]->right_child = low_node6;
+        middle_node2->elements[2]->left_child = low_node6;
+        middle_node2->elements[2]->right_child = low_node7;
+
+        low_node8->parent = middle_node3;
+        low_node9->parent = middle_node3;
+        low_node10->parent = middle_node3;
+
+        middle_node3->elements[0]->left_child = low_node8;
+        middle_node3->elements[0]->right_child = low_node9;
+        middle_node3->elements[1]->left_child = low_node9;
+        middle_node3->elements[1]->right_child = low_node10;
+
+        //building high-level
+
+        middle_node1->parent = root;
+        middle_node2->parent = root;
+        middle_node3->parent = root;
+
+        root->elements[0]->left_child = middle_node1;
+        root->elements[0]->right_child = middle_node2;
+        root->elements[1]->left_child = middle_node2;
+        root->elements[1]->right_child = middle_node3;
+
+        size = 35;
+
     }
 
 public:
@@ -440,12 +586,12 @@ public:
     };
 
     void erase(T elem) {
-//        erase(elem, ROOT);
+        erase(elem, ROOT);
     }
 
-//    void test() {
-//        build_test(ROOT);
-//    }
+    void test() {
+        build_test(ROOT);
+    }
 
 };
 
@@ -459,6 +605,11 @@ int main() {
 //    for (int i : arr){
 //        b.insert(i);
 //    }
-
+    b.test();
+    b.erase(64);
+    b.erase(23);
+    b.erase(72);
+    b.erase(65);
+    b.erase(20);
     return 0;
 }
