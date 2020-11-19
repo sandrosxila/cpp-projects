@@ -95,12 +95,12 @@ private:
         }
 
 //        get left child of the first element
-        T first_left_child() {
+        bNode* first_left_child() {
             return first()->left_child;
         }
 
 //        get right child of the first element
-        T first_right_child() {
+        bNode* first_right_child() {
             return first()->right_child;
         }
 
@@ -148,11 +148,15 @@ private:
 
 //        get the right child of the last element of b-Node
         bNode *get_rightmost_child() {
+            if (empty())
+                return nullptr;
             return last()->right_child;
         }
 
 //        get the left child of the first element of b-Node
         bNode *get_leftmost_child() {
+            if (empty())
+                return nullptr;
             return first()->left_child;
         }
 
@@ -168,10 +172,9 @@ private:
 
 //        add the element at index
         void add_at(int index, element<bNode *> *elem) {
-            if(index == elements.size()){
+            if (index == elements.size()) {
                 add_last(elem);
-            }
-            else elements.insert(elements.begin() + index, elem);
+            } else elements.insert(elements.begin() + index, elem);
         }
 
 //        pop an element at the first position
@@ -210,7 +213,7 @@ private:
                 }
             }
         }
-    } *ROOT = nullptr;
+    } *ROOT = nullptr, *recent_node = nullptr;
 
 //    split the b-Node and return new node
     bNode *split(bNode *node) {
@@ -298,39 +301,45 @@ private:
 
 //    merge elements from right sibling to left sibling
     void merge_to_left(bNode *&left_node, bNode *right_node) {
-        left_node->last()->right_child = right_node->get_leftmost_child();
-        if(left_node->has_rightmost_child())
-            left_node->last()->right_child->parent = left_node;
-        while (!right_node->empty()) {
-            left_node->add_last(right_node->pop_first());
-            if(left_node->last()->left_child!=nullptr)
-                left_node->last()->left_child->parent = left_node;
-            if(left_node->last()->right_child!=nullptr)
+        if (!right_node->empty()) {
+            left_node->last()->right_child = right_node->get_leftmost_child();
+            if (left_node->has_rightmost_child())
                 left_node->last()->right_child->parent = left_node;
+            while (!right_node->empty()) {
+                left_node->add_last(right_node->pop_first());
+                if (left_node->last()->left_child != nullptr)
+                    left_node->last()->left_child->parent = left_node;
+                if (left_node->last()->right_child != nullptr)
+                    left_node->last()->right_child->parent = left_node;
+            }
         }
         delete right_node;
+        right_node = nullptr;
     }
 
 //    merge elements from left sibling to right sibling
     void merge_to_right(bNode *left_node, bNode *&right_node) {
-        right_node->first()->left_child = left_node->get_rightmost_child();
-        if(right_node->has_leftmost_child())
-            right_node->first()->left_child->parent = right_node;
-        while (!left_node->empty()) {
-            right_node->add_first(left_node->pop_last());
-            if(right_node->last()->left_child != nullptr)
-                right_node->last()->left_child->parent = right_node;
-            if(right_node->last()->right_child != nullptr)
-                right_node->last()->right_child->parent = right_node;
+        if (!left_node->empty()) {
+            right_node->first()->left_child = left_node->get_rightmost_child();
+            if (right_node->has_leftmost_child())
+                right_node->first()->left_child->parent = right_node;
+            while (!left_node->empty()) {
+                right_node->add_first(left_node->pop_last());
+                if (right_node->last()->left_child != nullptr)
+                    right_node->last()->left_child->parent = right_node;
+                if (right_node->last()->right_child != nullptr)
+                    right_node->last()->right_child->parent = right_node;
+            }
         }
         delete left_node;
+        left_node = nullptr;
     }
 
 //    shift one element from left child to parent and from parent to right child
     void propagate_from_left_sibling(bNode *node, int parent_pos, bNode *left_sibling) {
         element<bNode *> *node_element = node->parent->pop_at(parent_pos);
         node_element->left_child = left_sibling->get_rightmost_child();
-        node_element->right_child = node->get_leftmost_child();
+        node_element->right_child = node->has_rightmost_child() ? node->get_leftmost_child() : recent_node;
         node->add_first(node_element);
         element<bNode *> *parent_element = left_sibling->pop_last();
         parent_element->left_child = left_sibling;
@@ -341,7 +350,7 @@ private:
 //    shift one element from right child to parent and from parent to left child
     void propagate_from_right_sibling(bNode *node, int parent_pos, bNode *right_sibling) {
         element<bNode *> *node_element = node->parent->pop_at(parent_pos);
-        node_element->left_child = node->get_rightmost_child();
+        node_element->left_child = node->has_leftmost_child() ? node->get_rightmost_child() : recent_node;
         node_element->right_child = right_sibling->get_leftmost_child();
         node->add_last(node_element);
         element<bNode *> *parent_element = right_sibling->pop_first();
@@ -357,8 +366,9 @@ private:
             node->parent->at(parent_pos - 1)->right_child = node;
         }
         parent_element->left_child = nullptr;
-        parent_element->right_child = node->get_leftmost_child();
+        parent_element->right_child = node->has_leftmost_child() ? node->get_leftmost_child() : recent_node;
         node->add_first(parent_element);
+        node->is_leaf = node->is_leaf && left_sibling->is_leaf;
         merge_to_right(left_sibling, node);
         if (node->parent == ROOT && ROOT->size() == 0) {
             ROOT = node;
@@ -373,9 +383,10 @@ private:
         if (node->parent->has_left_child_at(parent_pos)) {
             node->parent->at(parent_pos)->left_child = node;
         }
-        parent_element->left_child = node->get_rightmost_child();
+        parent_element->left_child = node->has_rightmost_child() ? node->get_rightmost_child() : recent_node;
         parent_element->right_child = nullptr;
         node->add_last(parent_element);
+        node->is_leaf = node->is_leaf && right_sibling->is_leaf;
         merge_to_left(node, right_sibling);
         if (node->parent == ROOT && ROOT->size() == 0) {
             ROOT = node;
@@ -396,20 +407,22 @@ private:
         else if (right_sibling != nullptr && right_sibling->size() > min_elements)
             propagate_from_right_sibling(node, side ? parent_position + 1 : parent_position, right_sibling);
 //        case 4: when leaf node has minimum number of elements and left-sibling with minimum number of elements
-        else if (left_sibling != nullptr && left_sibling->size() == min_elements)
+        else if (left_sibling != nullptr && left_sibling->size() <= min_elements)
             propagate_down_from_left(node, side ? parent_position : parent_position - 1, left_sibling);
 //        case 5: when leaf node has minimum number of elements and right-sibling with minimum number of elements
-        else if (right_sibling != nullptr && right_sibling->size() == min_elements)
+        else if (right_sibling != nullptr && right_sibling->size() <= min_elements)
             propagate_down_from_right(node, side ? parent_position + 1 : parent_position, right_sibling);
+        recent_node = node;
     }
 
 //    take inorder predecessor and balance affected nodes excluding the root node of sub-tree
     element<bNode *> *take_inorder_predecessor(bNode *current, int parent_position, bool side, bool top = true) {
         element<bNode *> *inorder_predecessor =
                 current->has_rightmost_child() ?
-                take_inorder_predecessor(current->get_rightmost_child(),current->size() - 1,true, false) : current->pop_last();
-        if(!top && current->size() < min_elements)
-            balance(current,parent_position,side);
+                take_inorder_predecessor(current->get_rightmost_child(), current->size() - 1, true, false)
+                                               : current->pop_last();
+        if (!top && current->size() < min_elements)
+            balance(current, parent_position, side);
         return inorder_predecessor;
     }
 
@@ -417,9 +430,9 @@ private:
     element<bNode *> *take_inorder_successor(bNode *current, int parent_position, bool side, bool top = true) {
         element<bNode *> *inorder_successor =
                 current->has_leftmost_child() ?
-                take_inorder_successor(current->get_leftmost_child(),0,false, false) : current->pop_first();
-        if(!top && current->size() < min_elements)
-            balance(current,parent_position,side);
+                take_inorder_successor(current->get_leftmost_child(), 0, false, false) : current->pop_first();
+        if (!top && current->size() < min_elements)
+            balance(current, parent_position, side);
         return inorder_successor;
     }
 
@@ -429,43 +442,46 @@ private:
 //            case 1: when leaf-node has more than minimum number of elements
             if (node->size() > min_elements) {
                 node->pop_at(position);
-            } else if (node->size() == min_elements) {
+            }
+            else {
                 node->pop_at(position);
                 balance(node, parent_position, side);
             }
-        } else {
+        }
+        else {
 //            case 6: when internal node has a left child
             if (node->has_left_child_at(position)) {
                 element<bNode *> *elem = node->at(position);
-                element<bNode *> *inorder_predecessor = take_inorder_predecessor(elem->left_child,position,false);
+                element<bNode *> *inorder_predecessor = take_inorder_predecessor(elem->left_child, position, false);
                 inorder_predecessor->left_child = elem->left_child;
                 inorder_predecessor->right_child = elem->right_child;
                 node->pop_at(position);
                 node->add_at(position, inorder_predecessor);
-                if(node->left_child_at(position)->size() < min_elements)
-                    balance(node->left_child_at(position),position,false);
+                if (node->left_child_at(position)->size() < min_elements)
+                    balance(node->left_child_at(position), position, false);
             }
 //            case 7: when internal node has a right child
             else if (node->has_right_child_at(position)) {
                 element<bNode *> *elem = node->at(position);
-                element<bNode *> *inorder_successor = take_inorder_successor(elem->right_child,position,true);
+                element<bNode *> *inorder_successor = take_inorder_successor(elem->right_child, position, true);
                 inorder_successor->left_child = elem->left_child;
                 inorder_successor->right_child = elem->right_child;
                 node->pop_at(position);
                 node->add_at(position, inorder_successor);
-                if(node->right_child_at(position)->size() < min_elements)
+                if (node->right_child_at(position)->size() < min_elements)
                     balance(node->right_child_at(position), position, true);
             }
         }
     }
 
 //    deletion of element
-    void erase(T elem, bNode *current, int parent_index = -1, bool side = false) {
+    void erase(T elem, bNode *current, int parent_index = -1, bool side = false, bool is_root = true) {
+        recent_node = nullptr;
         if (current->empty()) {
             return;
         } else if (elem > current->last()->value) {
             if (current->has_rightmost_child()) {
-                erase(elem, current->get_rightmost_child(), current->size() - 1, true);
+                erase(elem, current->get_rightmost_child(), current->size() - 1, true, false);
             } else {
                 return;
             }
@@ -477,7 +493,7 @@ private:
                     break;
                 } else if (elem < current->value_at(idx)) {
                     if (current->has_left_child_at(idx)) {
-                        erase(elem, current->left_child_at(idx), idx, false);
+                        erase(elem, current->left_child_at(idx), idx, false, false);
                         break;
                     } else {
                         return;
@@ -485,20 +501,22 @@ private:
                 }
             }
         }
-        if (current != ROOT && current->size() < min_elements) {
+        if (!is_root && current->size() < min_elements) {
             balance(current, parent_index, side);
         }
+        recent_node = current;
     }
 
-    void print_all(bNode *&current){
-        for (element<bNode *> * i : current->elements){
-            if(i->has_left_child())
+    void print_all(bNode *&current) {
+        for (element<bNode *> *i : current->elements) {
+            if (i->has_left_child())
                 print_all(i->left_child);
             cout << i->value << ' ';
         }
-        if(current->has_rightmost_child())
+        if (current->has_rightmost_child())
             print_all(current->last()->right_child);
     }
+
     void build_test(bNode *&root) {
         // root node
         root = new bNode();
@@ -645,7 +663,7 @@ public:
         erase(elem, ROOT);
     }
 
-    int size(){
+    int size() {
         return _size;
     }
 
@@ -653,38 +671,52 @@ public:
         build_test(ROOT);
     }
 
-    void print_all(){
+    void print_all() {
         print_all(ROOT);
     }
 };
 
 int main() {
 
-    bTree<int> b(5);
+    bTree<int> b(8);
 
-    int arr[] = {4, 4, 5, 5, 6, 10, 14, 15, 16, 20, 23, 27, 50, 51, 52, 60, 64, 65, 68, 70, 72, 73, 75, 77, 78, 79, 81, 82,
+    int arr[] = {4, 4, 5, 5, 6, 10, 14, 15, 16, 20, 23, 27, 50, 51, 52, 60, 64, 65, 68, 70, 72, 73, 75, 77, 78, 79, 81,
+                 82,
                  89, 90, 92, 93, 95, 108, 110, 111};
 
-    for (int i : arr){
+    for (int i : arr) {
         b.insert(i);
     }
     b.print_all();
 //    b.test();
-    cout<<endl;
+    cout << endl;
     b.erase(64);
+    b.print_all();cout << endl;
     b.erase(23);
+    b.print_all();cout << endl;
     b.erase(72);
+    b.print_all();cout << endl;
     b.erase(65);
+    b.print_all();cout << endl;
     b.erase(20);
+    b.print_all();cout << endl;
     b.erase(70);
+    b.print_all();cout << endl;
     b.erase(95);
+    b.print_all();cout << endl;
     b.erase(77);
+    b.print_all();cout << endl;
     b.erase(80);
+    b.print_all();cout << endl;
     b.erase(89);
+    b.print_all();cout << endl;
     b.erase(6);
+    b.print_all();cout << endl;
     b.erase(16);
+    b.print_all();cout << endl;
     b.erase(27);
+    b.print_all();cout << endl;
     b.erase(50);
-    b.print_all();
+    b.print_all();cout << endl;
     return 0;
 }
