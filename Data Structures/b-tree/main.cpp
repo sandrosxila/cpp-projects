@@ -199,18 +199,16 @@ private:
         }
 
 //        add new element automatically
-        void add(element<bNode *> *elem) {
-            if (empty() || (!empty() && elem->value > last_value())) {
+        void add(element<bNode *> *elem, int idx, bool side) {
+            if (empty() || (idx == size() - 1 && side == true)) {
                 add_last(elem);
             }
-            for (int idx = 0; idx < size(); idx++) {
-                if (elem->value < value_at(idx)) {
-                    if (has_left_child_at(idx))
-                        at(idx)->left_child = elem->right_child;
-                    if (has_right_child_at(idx - 1))
-                        at(idx - 1)->right_child = elem->left_child;
-                    add_at(idx, elem);
-                }
+            else {
+                if (has_left_child_at(idx))
+                    at(idx)->left_child = elem->right_child;
+                if (has_right_child_at(idx - 1))
+                    at(idx - 1)->right_child = elem->left_child;
+                add_at(idx, elem);
             }
         }
     } *ROOT = nullptr, *recent_node = nullptr;
@@ -230,7 +228,7 @@ private:
     }
 
 //    split up node and increase height of b-tree
-    void lift_up(bNode *node) {
+    void lift_up(bNode *node, int parent_index, bool side) {
         element<bNode *> *parent_element = node->pop_at(_base / 2);
         bNode *new_node = split(node);
 
@@ -246,18 +244,18 @@ private:
         parent_element->left_child = node;
         parent_element->right_child = new_node;
 
-        node->parent->add(parent_element);
+        node->parent->add(parent_element, parent_index, side);
         node->parent->is_leaf = false;
     }
 
 //    insert an element in b-tree
-    void insert(T elem, bNode *current) {
+    void insert(T elem, bNode *current, int parent_index = -1, bool side = false) {
         if (current->empty()) {
             current->add_first(new element<bNode *>(elem));
             _size++;
         } else if (elem >= current->last()->value) {
             if (current->has_rightmost_child()) {
-                insert(elem, current->get_rightmost_child());
+                insert(elem, current->get_rightmost_child(),current->size() - 1, true);
             } else {
                 current->add_last(new element<bNode *>(elem));
                 _size++;
@@ -266,7 +264,7 @@ private:
             for (int idx = 0; idx < current->size(); idx++) {
                 if (elem < current->value_at(idx)) {
                     if (current->has_left_child_at(idx)) {
-                        insert(elem, current->left_child_at(idx));
+                        insert(elem, current->left_child_at(idx), idx, false);
                         break;
                     } else {
                         current->add_at(idx, new element<bNode *>(elem));
@@ -277,7 +275,7 @@ private:
             }
         }
         if (current->size() == _base) {
-            lift_up(current);
+            lift_up(current, parent_index, side);
         }
     }
 
@@ -678,7 +676,7 @@ public:
 
 int main() {
 
-    bTree<int> b(8);
+    bTree<int> b(5);
 
     int arr[] = {4, 4, 5, 5, 6, 10, 14, 15, 16, 20, 23, 27, 50, 51, 52, 60, 64, 65, 68, 70, 72, 73, 75, 77, 78, 79, 81,
                  82,
