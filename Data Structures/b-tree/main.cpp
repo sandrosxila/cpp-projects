@@ -408,16 +408,16 @@ private:
         bNode *left_sibling = get_left_sibling(node, side, parent_position);
         bNode *right_sibling = get_right_sibling(node, side, parent_position);
 
-//        case 2: when leaf node has minimum number of elements and left-sibling with more than minimum number of elements
+//        case 3: when leaf node has minimum number of elements and left-sibling with more than minimum number of elements
         if (left_sibling != nullptr && left_sibling->size() > min_elements)
             propagate_from_left_sibling(node, side ? parent_position : parent_position - 1, left_sibling);
-//        case 3: when leaf node has minimum number of elements and right-sibling with more than minimum number of elements
+//        case 4: when leaf node has minimum number of elements and right-sibling with more than minimum number of elements
         else if (right_sibling != nullptr && right_sibling->size() > min_elements)
             propagate_from_right_sibling(node, side ? parent_position + 1 : parent_position, right_sibling);
-//        case 4: when leaf node has minimum number of elements and left-sibling with minimum number of elements
+//        case 5: when leaf node has minimum number of elements and left-sibling with minimum number of elements
         else if (left_sibling != nullptr && left_sibling->size() <= min_elements)
             propagate_down_from_left(node, side ? parent_position : parent_position - 1, left_sibling);
-//        case 5: when leaf node has minimum number of elements and right-sibling with minimum number of elements
+//        case 6: when leaf node has minimum number of elements and right-sibling with minimum number of elements
         else if (right_sibling != nullptr && right_sibling->size() <= min_elements)
             propagate_down_from_right(node, side ? parent_position + 1 : parent_position, right_sibling);
         recent_node = node;
@@ -451,13 +451,14 @@ private:
             if (node->size() > min_elements) {
                 node->pop_at(position);
             }
+//            case 2: when leaf-node has not more than minimum number of elements
             else {
                 node->pop_at(position);
                 balance(node, parent_position, side);
             }
         }
         else {
-//            case 6: when internal node has a left child
+//            case 7: when internal node has a left child
             if (node->has_left_child_at(position)) {
                 element<bNode *> *elem = node->at(position);
                 element<bNode *> *inorder_predecessor = take_inorder_predecessor(elem->left_child, position, false);
@@ -468,7 +469,7 @@ private:
                 if (node->left_child_at(position)->size() < min_elements)
                     balance(node->left_child_at(position), position, false);
             }
-//            case 7: when internal node has a right child
+//            case 8: when internal node has a right child
             else if (node->has_right_child_at(position)) {
                 element<bNode *> *elem = node->at(position);
                 element<bNode *> *inorder_successor = take_inorder_successor(elem->right_child, position, true);
@@ -686,45 +687,20 @@ public:
 
 int main() {
 
-    bTree<int> b(8);
-
-    int arr[] = {4, 4, 5, 5, 6, 10, 14, 15, 16, 20, 23, 27, 50, 51, 52, 60, 64, 65, 68, 70, 72, 73, 75, 77, 78, 79, 81,
-                 82,
-                 89, 90, 92, 93, 95, 108, 110, 111};
-
-    for (int i : arr) {
-        b.insert(i);
+    bTree<long long> b(5);
+    int n = 1000000;
+    for (int i = 0; i < n; i++) {
+        long long x = rand();
+        b.insert(x);
     }
-    b.print_all();
-//    b.test();
+
+    for (int i = 0; i < n ; i++) {
+        long long x = rand();
+        b.erase(x);
+    }
     cout << endl;
-    b.erase(64);
-    b.print_all();cout << endl;
-    b.erase(23);
-    b.print_all();cout << endl;
-    b.erase(72);
-    b.print_all();cout << endl;
-    b.erase(65);
-    b.print_all();cout << endl;
-    b.erase(20);
-    b.print_all();cout << endl;
-    b.erase(70);
-    b.print_all();cout << endl;
-    b.erase(95);
-    b.print_all();cout << endl;
-    b.erase(77);
-    b.print_all();cout << endl;
-    b.erase(80);
-    b.print_all();cout << endl;
-    b.erase(89);
-    b.print_all();cout << endl;
-    b.erase(6);
-    b.print_all();cout << endl;
-    b.erase(16);
-    b.print_all();cout << endl;
-    b.erase(27);
-    b.print_all();cout << endl;
-    b.erase(50);
-    b.print_all();cout << endl;
+    b.print_all();
+    cout << endl;
+
     return 0;
 }
