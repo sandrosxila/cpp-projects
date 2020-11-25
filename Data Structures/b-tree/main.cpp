@@ -311,6 +311,7 @@ private:
                     left_node->last()->right_child->parent = left_node;
             }
         }
+        right_node->parent = nullptr;
         delete right_node;
         right_node = nullptr;
     }
@@ -323,12 +324,13 @@ private:
                 right_node->first()->left_child->parent = right_node;
             while (!left_node->empty()) {
                 right_node->add_first(left_node->pop_last());
-                if (right_node->last()->left_child != nullptr)
-                    right_node->last()->left_child->parent = right_node;
-                if (right_node->last()->right_child != nullptr)
-                    right_node->last()->right_child->parent = right_node;
+                if (right_node->first()->left_child != nullptr)
+                    right_node->first()->left_child->parent = right_node;
+                if (right_node->first()->right_child != nullptr)
+                    right_node->first()->right_child->parent = right_node;
             }
         }
+        left_node->parent = nullptr;
         delete left_node;
         left_node = nullptr;
     }
@@ -337,7 +339,11 @@ private:
     void propagate_from_left_sibling(bNode *node, int parent_pos, bNode *left_sibling) {
         element<bNode *> *node_element = node->parent->pop_at(parent_pos);
         node_element->left_child = left_sibling->get_rightmost_child();
-        node_element->right_child = node->has_rightmost_child() ? node->get_leftmost_child() : recent_node;
+        node_element->right_child = node->has_leftmost_child() ? node->get_leftmost_child() : recent_node;
+        if(node_element->has_left_child())
+            node_element->left_child->parent = node;
+        if(node_element->has_right_child())
+            node_element->right_child->parent = node;
         node->add_first(node_element);
         element<bNode *> *parent_element = left_sibling->pop_last();
         parent_element->left_child = left_sibling;
@@ -348,8 +354,12 @@ private:
 //    shift one element from right child to parent and from parent to left child
     void propagate_from_right_sibling(bNode *node, int parent_pos, bNode *right_sibling) {
         element<bNode *> *node_element = node->parent->pop_at(parent_pos);
-        node_element->left_child = node->has_leftmost_child() ? node->get_rightmost_child() : recent_node;
+        node_element->left_child = node->has_rightmost_child() ? node->get_rightmost_child() : recent_node;
         node_element->right_child = right_sibling->get_leftmost_child();
+        if(node_element->has_left_child())
+            node_element->left_child->parent = node;
+        if(node_element->has_right_child())
+            node_element->right_child->parent = node;
         node->add_last(node_element);
         element<bNode *> *parent_element = right_sibling->pop_first();
         parent_element->left_child = node;
@@ -676,7 +686,7 @@ public:
 
 int main() {
 
-    bTree<int> b(5);
+    bTree<int> b(8);
 
     int arr[] = {4, 4, 5, 5, 6, 10, 14, 15, 16, 20, 23, 27, 50, 51, 52, 60, 64, 65, 68, 70, 72, 73, 75, 77, 78, 79, 81,
                  82,
