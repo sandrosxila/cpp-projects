@@ -1,0 +1,130 @@
+void build_test(bNode *&root) {
+        // root node
+        root = new bNode();
+        root->is_leaf = false;
+        root->add(new element(50));
+        root->add(new element(80));
+
+        //middle nodes
+
+        //middle node 1
+        auto middle_node1 = new bNode();
+        middle_node1->is_leaf = false;
+        middle_node1->add(new element(10));
+        middle_node1->add(new element(20));
+        //middle node 2
+        auto middle_node2 = new bNode();
+        middle_node2->is_leaf = false;
+        middle_node2->add(new element(60));
+        middle_node2->add(new element(70));
+        middle_node2->add(new element(75));
+        //middle node 3
+        auto middle_node3 = new bNode();
+        middle_node3->is_leaf = false;
+        middle_node3->add(new element(90));
+        middle_node3->add(new element(95));
+
+        //low nodes
+
+        //low node 1
+        auto low_node1 = new bNode();
+        low_node1->add(new element(4));
+        low_node1->add(new element(5));
+        low_node1->add(new element(6));
+
+        //low node 2
+        auto low_node2 = new bNode();
+        low_node2->add(new element(14));
+        low_node2->add(new element(15));
+        low_node2->add(new element(16));
+
+        //low node 3
+        auto low_node3 = new bNode();
+        low_node3->add(new element(23));
+        low_node3->add(new element(27));
+
+        //low node 4
+        auto low_node4 = new bNode();
+        low_node4->add(new element(51));
+        low_node4->add(new element(52));
+
+        //low node 5
+        auto low_node5 = new bNode();
+        low_node5->add(new element(64));
+        low_node5->add(new element(65));
+        low_node5->add(new element(68));
+
+        //low node 6
+        auto low_node6 = new bNode();
+        low_node6->add(new element(72));
+        low_node6->add(new element(73));
+
+        //low node 7
+        auto low_node7 = new bNode();
+        low_node7->add(new element(77));
+        low_node7->add(new element(78));
+        low_node7->add(new element(79));
+
+        //low node 8
+        auto low_node8 = new bNode();
+        low_node8->add(new element(81));
+        low_node8->add(new element(82));
+        low_node8->add(new element(89));
+
+        //low node 9
+        auto low_node9 = new bNode();
+        low_node9->add(new element(92));
+        low_node9->add(new element(93));
+
+        //low node 10
+        auto low_node10 = new bNode();
+        low_node10->add(new element(100));
+        low_node10->add(new element(110));
+        low_node10->add(new element(118));
+
+        //building low-level
+
+        low_node1->parent = middle_node1;
+        low_node2->parent = middle_node1;
+        low_node3->parent = middle_node1;
+
+        middle_node1->elements[0]->left_child = low_node1;
+        middle_node1->elements[0]->right_child = low_node2;
+        middle_node1->elements[1]->left_child = low_node2;
+        middle_node1->elements[1]->right_child = low_node3;
+
+        low_node4->parent = middle_node2;
+        low_node5->parent = middle_node2;
+        low_node6->parent = middle_node2;
+        low_node7->parent = middle_node2;
+
+        middle_node2->elements[0]->left_child = low_node4;
+        middle_node2->elements[0]->right_child = low_node5;
+        middle_node2->elements[1]->left_child = low_node5;
+        middle_node2->elements[1]->right_child = low_node6;
+        middle_node2->elements[2]->left_child = low_node6;
+        middle_node2->elements[2]->right_child = low_node7;
+
+        low_node8->parent = middle_node3;
+        low_node9->parent = middle_node3;
+        low_node10->parent = middle_node3;
+
+        middle_node3->elements[0]->left_child = low_node8;
+        middle_node3->elements[0]->right_child = low_node9;
+        middle_node3->elements[1]->left_child = low_node9;
+        middle_node3->elements[1]->right_child = low_node10;
+
+        //building high-level
+
+        middle_node1->parent = root;
+        middle_node2->parent = root;
+        middle_node3->parent = root;
+
+        root->elements[0]->left_child = middle_node1;
+        root->elements[0]->right_child = middle_node2;
+        root->elements[1]->left_child = middle_node2;
+        root->elements[1]->right_child = middle_node3;
+
+        _size = 35;
+
+    }
